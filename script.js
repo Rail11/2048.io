@@ -490,17 +490,17 @@ document.addEventListener('DOMContentLoaded', function () {
         createTileInCoordinates(1, 0, 1024);
 
         // Движения для кнопок.
-        document.addEventListener(`keydown`, (e) => {
-            if (e.code == `ArrowLeft`) {
+        document.addEventListener(`keydown`, (event) => {
+            if (event.code == `ArrowLeft`) {
                 moveLeft();
             }
-            if (e.code == `ArrowRight`) {
+            if (event.code == `ArrowRight`) {
                 moveRight();
             }
-            if (e.code == `ArrowUp`) {
+            if (event.code == `ArrowUp`) {
                 moveUp();
             }
-            if (e.code == `ArrowDown`) {
+            if (event.code == `ArrowDown`) {
                 moveDown();
             }
         });
@@ -513,14 +513,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 mouseUpX,
                 mouseUpY;
 
-            grid.addEventListener('mousedown', function (event) {
+            grid.addEventListener('mousedown', (event) => {
                 event.preventDefault();
 
                 mouseDownX = event.clientX;
                 mouseDownY = event.clientY;
             });
 
-            grid.addEventListener('mouseup', function (event) {
+            grid.addEventListener('mouseup', (event) => {
                 event.preventDefault();
 
                 mouseUpX = event.clientX;
@@ -558,17 +558,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 touchEndX,
                 touchEndY;
                 
-            grid.addEventListener('touchstart', function (event) {
+            grid.addEventListener('touchstart', (event) => {
                 event.preventDefault();
                 touchStartX = event.touches[0].clientX;
                 touchStartY = event.touches[0].clientY;
-                console.log(event.touches[0]);
             });
 
-            grid.addEventListener('touchend', function (event) {
+            grid.addEventListener('touchend', (event) => {
                 event.preventDefault();
-                touchEndX = event.touches[0].clientX;
-                touchStartY = event.touches[0].clientY;
+                touchEndX = event.changedTouches[0].clientX;
+                touchEndY = event.changedTouches[0].clientY;
 
                 if ((touchStartX - touchEndX) > (gridWidth / 10) && (touchStartX - touchEndX) > (touchStartY - touchEndY) && (touchStartX - touchEndX) > (touchEndY - touchStartY)) {
                     console.log('Left');
