@@ -1,13 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
     'use strict';
-    // Движения для мобильников.
-    // Если при нажатии кнопки местоположение плиток или их номинал не изменится, то ход не совершается.
-    // Cверстать место для показа очков и таймер.
-    // Сверстать таблицу очков и время внизу под игровым полем
-    // Сверстать поле внутри грида для конца игры в случае проигрыша(туда поставить кнопку начать заново) и выигрыша(туда поставить кнопку начать заново), когда выходит поле уведомления должны отмениться все события какие есть и очиститься поле.
-    // Подсчёт очков. За каждое соединение игровые очки увеличиваются на номинал получившейся плитки.
-    // Таблица результатов строится на основе потраченного времени которое потребовалось, чтобы набрать 2048.
-    // 
+
+    let popup = document.querySelector('.popup'),
+        popupMessage = document.querySelector('.popup__message'),
+        popupButton = document.querySelector('.popup__button'),
+        resultsArray = [];
+
+    popupButton.addEventListener('click', function () {
+        popup.style.display = 'none';
+        startGame(5);
+    });
 
     function startGame(gridSize) {
         // Создание многомерного массива для хранения плиток.
@@ -24,7 +26,87 @@ document.addEventListener('DOMContentLoaded', function () {
 
             return tilesArray;
         }
-        let tilesArray = createTilesArray();
+
+        let tilesArray = createTilesArray(),
+            scoreValue = document.querySelector('.score__value'),
+            hours = document.querySelector('.time__hours'),
+            minutes = document.querySelector('.time__minutes'),
+            seconds = document.querySelector('.time__seconds');
+
+        scoreValue.textContent = '0';
+        hours.textContent = '00';
+        minutes.textContent = '00';
+        seconds.textContent = '00';
+
+        let stopwatch = setInterval(() => {
+            if (+seconds.textContent == 59) {
+                seconds.textContent = '00';
+                if (+minutes.textContent == 59) {
+                    minutes.textContent = '00';
+                    if (+hours.textContent >= 9) {
+                        hours.textContent = +hours.textContent + 1;
+                    } else {
+                        hours.textContent = '0' + (+hours.textContent + 1);
+                    }
+                } else if (+minutes.textContent >= 9) {
+                    minutes.textContent = +minutes.textContent + 1;
+                } else {
+                    minutes.textContent = '0' + (+minutes.textContent + 1);
+                }
+            } else if (+seconds.textContent >= 9) {
+                seconds.textContent = +seconds.textContent + 1;
+            } else {
+                seconds.textContent = '0' + (+seconds.textContent + 1);
+            } 
+        }, 1000);
+
+        function writeDownTheResult() {
+            let hours = document.querySelector('.time__hours').textContent,
+                minutes = document.querySelector('.time__minutes').textContent,
+                seconds = document.querySelector('.time__seconds').textContent,
+                totalTime = +seconds + minutes * 60 + hours * 60 * 60,
+                result = [totalTime, +hours, +minutes, +seconds],
+                results = document.querySelector('.results__time');
+            
+            results.innerHTML = '';
+
+            resultsArray.push(result);
+
+            function compareFn(a, b) {
+                return a[0] - b[0];
+            }
+
+            resultsArray.sort(compareFn);
+
+            for (let i = 0; i < resultsArray.length; i++) {
+                let div = document.createElement('div'),
+                    hours = resultsArray[i][1];
+                    minutes = resultsArray[i][2];
+                    seconds = resultsArray[i][3];
+                
+                if (hours < 10) {
+                    hours = '0' + hours;
+                }
+
+                if (minutes < 10) {
+                    minutes = '0' + minutes;
+                }
+                
+                if (seconds < 10) {
+                    seconds = '0' + seconds;
+                }
+
+                div.classList.add('results__time');
+
+                div.innerHTML = `
+                    <span class="results__hours">${hours}</span>h:
+                    <span class="results__minutes">${minutes}</span>m:
+                    <span class="results__seconds">${seconds}</span>s
+                `;
+                
+                results.append(div);
+            }
+        }
 
         // Создание вёрстки клеток исходя из gridSize.
         function createGrid() {
@@ -46,7 +128,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         }
-        createGrid();
 
         // Получение случайного числа в диапозоне от 0 до указаного в gridSize.
         function getRandomNum() {
@@ -68,19 +149,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Получение true, если есть место в tilesArray.
         function checkEmptyTileInTilesArray() {
-            let result = false;
+            let answer = false;
 
             for (let i = 0; i < tilesArray.length; i++) {
                 for (let j = 0; j < tilesArray.length; j++) {
                     if (tilesArray[i][j] == 0) {
-                        result = true;
+                        answer = true;
 
                         break;
                     }
                 }
             }
 
-            return result;
+            return answer;
         }
 
         // Создание плитки в вёрстке и в многомерном массиве.
@@ -123,9 +204,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 grid.appendChild(tile);
             } catch (e) {}
         }
-
-        // createTile();
-        // createTile();
 
         function createTileInCoordinates(x, y, value) {
             let tileX = x,
@@ -198,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 100);
         }
 
-        // Складывание и удаление плиток влево и назначение новых позиций.
+        // Складывание и удаление плиток влево и назначение новых позиций и подсчёт очков.
         function stackingAndRemovingTilesToTheLeft() {
             let tilesForRemove = [];
 
@@ -208,6 +286,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 for (let j = 0; j < tilesArray[i].length - 1; j++) {
                     if (tilesArray[i][j].getAttribute('data-value') == tilesArray[i][j + 1].getAttribute('data-value')) {
                         tilesArray[i][j].setAttribute('data-value', +tilesArray[i][j].getAttribute('data-value') * 2);
+                        scoreValue.textContent = +scoreValue.textContent + +tilesArray[i][j].getAttribute('data-value');
 
                         tilesArray[i][j + 1].setAttribute('data-x', j);
 
@@ -234,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 100);
         }
 
-        // Складывание и удаление плиток вправо и назначение новых позиций.
+        // Складывание и удаление плиток вправо и назначение новых позиций и подсчёт очков.
         function stackingAndRemovingTilesToTheRight() {
             let tilesForRemove = [];
 
@@ -247,6 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     if (tilesArray[i][j].getAttribute('data-value') == tilesArray[i][j - 1].getAttribute('data-value')) {
                         tilesArray[i][j].setAttribute('data-value', tilesArray[i][j].getAttribute('data-value') * 2);
+                        scoreValue.textContent = +scoreValue.textContent + +tilesArray[i][j].getAttribute('data-value');
 
                         tilesArray[i][j - 1].setAttribute('data-x', dataX);
                         tilesArray[i][j].setAttribute('data-x', dataX);
@@ -300,6 +380,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 for (let j = 0; j < array.length - 1; j++) {
                     if (array[j].getAttribute('data-value') == array[j + 1].getAttribute('data-value')) {
                         array[j].setAttribute('data-value', +array[j].getAttribute('data-value') * 2);
+                        scoreValue.textContent = +scoreValue.textContent + +array[j].getAttribute('data-value');
 
                         array[j + 1].setAttribute('data-y', j);
 
@@ -340,6 +421,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 for (let j = array.length - 1; j > 0; j--) {
                     if (array[j].getAttribute('data-value') == array[j - 1].getAttribute('data-value')) {
                         array[j].setAttribute('data-value', array[j].getAttribute('data-value') * 2);
+                        scoreValue.textContent = +scoreValue.textContent + +array[j].getAttribute('data-value');
 
                         array[j - 1].setAttribute('data-y', dataY);
                         array[j].setAttribute('data-y', dataY);
@@ -377,12 +459,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function checkingMovesAndEndOfGame() {
-            let result;
+            let answer;
 
             for (let i = 0; i < tilesArray.length; i++) {
                 for (let j = 0; j < tilesArray.length - 1; j++) {
                     if (tilesArray[i][j].getAttribute('data-value') == tilesArray[i][j + 1].getAttribute('data-value')) {
-                        result = true;
+                        answer = true;
                     }
                 }
             }
@@ -390,104 +472,227 @@ document.addEventListener('DOMContentLoaded', function () {
             for (let i = 0; i < tilesArray.length - 1; i++) {
                 for (let j = 0; j < tilesArray.length; j++) {
                     if (tilesArray[i][j].getAttribute('data-value') == tilesArray[i + 1][j].getAttribute('data-value')) {
-                        result = true;
+                        answer = true;
                     }
                 }
             }
 
-            if (result != true) {
+            if (answer != true) {
+                clearInterval(stopwatch);
+                clearTilesArray();
                 setTimeout(() => {
-                    alert('Game Over!');
-                }, 200);
+                    popupMessage.textContent = 'Game Over!';
+                    popup.style.display = 'flex';
+                    clearGrid();
+                }, 100);
             }
 
-            return result;
+            return answer;
         }
 
         function check2048() {
-            let result = false;
+            let answer = false;
             for (let i = 0; i < tilesArray.length; i++) {
                 for (let j = 0; j < tilesArray.length; j++) {
                     try {
                         if (tilesArray[i][j].getAttribute('data-value') === '2048') {
-                            result = true;
+                            answer = true;
+                            clearInterval(stopwatch);
+                            clearTilesArray();
+                            writeDownTheResult();
                             setTimeout(() => {
-                                alert('You Won!');
-
-                                clearField();
-                            }, 200);
+                                popupMessage.textContent = 'You Won!';
+                                popup.style.display = 'flex';
+                                clearGrid();
+                            }, 100);
                         }
                     } catch (error) {}
                 }
             }
 
-            return result;
+            return answer;
         }
 
-        function clearField() {
+        function clearTilesArray() {
             for (let i = 0; i < tilesArray.length; i++) {
                 for (let j = 0; j < tilesArray.length; j++) {
                     tilesArray[i][j] = 0;
                 }
             }
+        }
 
+        function clearGrid() {
             let grid = document.querySelector('.grid');
 
             grid.innerHTML = '';
-
-            createGrid();
         }
 
         function moveLeft() {
+            let tilesArrayCopy = [];
+
+            for (let i = 0; i < gridSize; i++) {
+                tilesArrayCopy.push([]);           
+            }
+
+            for (let i = 0; i < tilesArray.length; i++) {
+                for (let j = 0; j < tilesArray.length; j++) {
+                    tilesArrayCopy[i][j] = tilesArray[i][j];
+                }
+            }
+
             stackingAndRemovingTilesToTheLeft();
             updateTilesPosition();
             updateTilesValuesAndClasses();
-            if (check2048() != true) {
+
+            function checkDifferenceInArray() {
+                let result = false;
+
+                for (let i = 0; i < tilesArray.length; i++) {
+                    for (let j = 0; j < tilesArray.length; j++) {
+                        if (tilesArray[i][j] != tilesArrayCopy[i][j]) {
+                            result = true;
+
+                            break;
+                        }
+                    }
+                }
+                return result;
+            }
+
+            if (check2048() != true && checkDifferenceInArray() === true) {
                 createTile();
             }
+
             if (checkEmptyTileInTilesArray() == false) {
                 checkingMovesAndEndOfGame();
             }
         }
 
         function moveRight() {
+            let tilesArrayCopy = [];
+
+            for (let i = 0; i < gridSize; i++) {
+                tilesArrayCopy.push([]);           
+            }
+
+            for (let i = 0; i < tilesArray.length; i++) {
+                for (let j = 0; j < tilesArray.length; j++) {
+                    tilesArrayCopy[i][j] = tilesArray[i][j];
+                }
+            }
+
             stackingAndRemovingTilesToTheRight();
             updateTilesPosition();
             updateTilesValuesAndClasses();
-            if (check2048() != true) {
+
+            function checkDifferenceInArray() {
+                let result = false;
+
+                for (let i = 0; i < tilesArray.length; i++) {
+                    for (let j = 0; j < tilesArray.length; j++) {
+                        if (tilesArray[i][j] != tilesArrayCopy[i][j]) {
+                            result = true;
+
+                            break;
+                        }
+                    }
+                }
+
+                return result;
+            }
+
+            if (check2048() != true && checkDifferenceInArray() === true) {
                 createTile();
             }
+
             if (checkEmptyTileInTilesArray() == false) {
                 checkingMovesAndEndOfGame();
             }
         }
 
         function moveUp() {
+            let tilesArrayCopy = [];
+
+            for (let i = 0; i < gridSize; i++) {
+                tilesArrayCopy.push([]);           
+            }
+
+            for (let i = 0; i < tilesArray.length; i++) {
+                for (let j = 0; j < tilesArray.length; j++) {
+                    tilesArrayCopy[i][j] = tilesArray[i][j];
+                }
+            }
+            
             stackingAndRemovingTilesToTheUp();
             updateTilesPosition();
             updateTilesValuesAndClasses();
-            if (check2048() != true) {
+
+            function checkDifferenceInArray() {
+                let result = false;
+
+                for (let i = 0; i < tilesArray.length; i++) {
+                    for (let j = 0; j < tilesArray.length; j++) {
+                        if (tilesArray[i][j] != tilesArrayCopy[i][j]) {
+                            result = true;
+
+                            break;
+                        }
+                    }
+                }
+
+                return result;
+            }
+
+            if (check2048() != true && checkDifferenceInArray() === true) {
                 createTile();
             }
+
             if (checkEmptyTileInTilesArray() == false) {
                 checkingMovesAndEndOfGame();
             }
         }
 
         function moveDown() {
+            let tilesArrayCopy = [];
+
+            for (let i = 0; i < gridSize; i++) {
+                tilesArrayCopy.push([]);           
+            }
+
+            for (let i = 0; i < tilesArray.length; i++) {
+                for (let j = 0; j < tilesArray.length; j++) {
+                    tilesArrayCopy[i][j] = tilesArray[i][j];
+                }
+            }
+
             stackingAndRemovingTilesToTheDown();
             updateTilesPosition();
             updateTilesValuesAndClasses();
-            if (check2048() != true) {
+
+            function checkDifferenceInArray() {
+                let result = false;
+
+                for (let i = 0; i < tilesArray.length; i++) {
+                    for (let j = 0; j < tilesArray.length; j++) {
+                        if (tilesArray[i][j] != tilesArrayCopy[i][j]) {
+                            result = true;
+
+                            break;
+                        }
+                    }
+                }
+
+                return result;
+            }
+
+            if (check2048() != true && checkDifferenceInArray() === true) {
                 createTile();
             }
+
             if (checkEmptyTileInTilesArray() == false) {
                 checkingMovesAndEndOfGame();
             }
         }
-
-        createTileInCoordinates(0, 0, 1024);
-        createTileInCoordinates(1, 0, 1024);
 
         // Движения для кнопок.
         document.addEventListener(`keydown`, (event) => {
@@ -548,8 +753,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // mouseMove();
-
         function touchMove() {
             let grid = document.querySelector('.grid'),
                 gridWidth = grid.offsetWidth,
@@ -590,9 +793,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-
+        
+        createGrid();
+        // createTile();
+        // createTile();
+        createTileInCoordinates(0, 0, 1024);
+        createTileInCoordinates(1, 0, 1024);
+        mouseMove();
         touchMove();
     }
-
-    startGame(5);
 });

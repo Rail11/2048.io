@@ -12,9 +12,35 @@
 </head>
 
 <body>
-    <div class="game">
-        <div class="grid">
+    <div class="container">
+        <h1 class="header">2048</h1>
+
+        <div class="result">
+            <div class="score">
+                Score: <span class="score__value">0</span>
+            </div>
+            <div class="time">
+                Time:
+                <span class="time__hours">00</span>h:
+                <span class="time__minutes">00</span>m:
+                <span class="time__seconds">00</span>s
+            </div>
         </div>
+
+        <div class="game">
+            <div class="grid">
+            </div>
+            <div class="popup">
+                <div class="popup__message">Are you ready?</div>
+                <button class="popup__button">Start new game</button>
+            </div>
+        </div>
+
+        <div class="results">
+            <div class="results__header">Time spent getting 2048:</div>
+            <div class="results__time"></div>
+        </div>
+
     </div>
 
     <script src="script.js"></script>
